@@ -47,8 +47,6 @@ The 59 tests cover endpoint identity/normalization, URL and identifier rejection
 
 No test sent a model prompt, read machine-wide credentials, changed `~/.pi/agent/settings.json`, changed `models.json`, or wrote a persistent Pi session. The CLI smoke test loaded the actual package entry with `--help`, confirmed `--endpoint-model-memory` registration, and confirmed its isolated settings file remained unchanged.
 
-## Delivery boundary
-
 ## Independent review
 
 - Reviewer: `codex-local/gpt-6-astra:high` (fresh read-only context; probe status `ok`)
@@ -56,4 +54,6 @@ No test sent a model prompt, read machine-wide credentials, changed `~/.pi/agent
 - Blocker/major findings: `0`
 - Residual minor notes: standard Pi CLI entry-name allowlist may need maintenance if Pi changes its official entry name; Pi's public `model_select` hook cannot distinguish a manual selection from another extension's `setModel()` call. Both are documented in the architecture and README and do not block the Pi 0.99.1 target.
 
-The code is implemented and verified in the feature worktree: runtime commit `f4f2640`, documentation/evidence follow-up `2c6360a`; current branch head `2c6360a` is pushed to `origin/codex/endpoint-model-memory-mvp-20260930`. This record does **not** claim that the candidate is merged, published to npm, globally installed, or enabled in the user's Pi configuration. Those are separate delivery states requiring their own evidence and authorization. The GitHub repository was empty at task start, so no default `main` base/PR was created or force-initialized by this task.
+## Delivery boundary
+
+The code is implemented and verified in the feature worktree: runtime commit `f4f2640`, documentation/evidence follow-ups `2c6360a` and `22bf0ba`; current branch head `22bf0ba` is pushed to `origin/codex/endpoint-model-memory-mvp-20260930`. This record does **not** claim that the candidate is merged, published to npm, globally installed, or enabled in the user's Pi configuration. Those are separate delivery states requiring their own evidence and authorization. The GitHub repository was empty at task start, so no default `main` base/PR was created or force-initialized by this task.
