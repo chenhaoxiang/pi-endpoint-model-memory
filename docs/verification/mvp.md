@@ -49,4 +49,11 @@ No test sent a model prompt, read machine-wide credentials, changed `~/.pi/agent
 
 ## Delivery boundary
 
-The code is locally implemented and verified in the feature worktree. This record does **not** claim that the candidate is pushed, reviewed, merged, published to npm, globally installed, or enabled in the user's Pi configuration. Those are separate delivery states requiring their own evidence and authorization.
+## Independent review
+
+- Reviewer: `codex-local/gpt-6-astra:high` (fresh read-only context; probe status `ok`)
+- Verdict: `APPROVE_WITH_COMMENTS`
+- Blocker/major findings: `0`
+- Residual minor notes: standard Pi CLI entry-name allowlist may need maintenance if Pi changes its official entry name; Pi's public `model_select` hook cannot distinguish a manual selection from another extension's `setModel()` call. Both are documented in the architecture and README and do not block the Pi 0.99.1 target.
+
+The code is implemented and verified in the feature worktree, committed as `f4f2640`, and pushed to `origin/codex/endpoint-model-memory-mvp-20260930`. This record does **not** claim that the candidate is merged, published to npm, globally installed, or enabled in the user's Pi configuration. Those are separate delivery states requiring their own evidence and authorization. The GitHub repository was empty at task start, so no default `main` base/PR was created or force-initialized by this task.
