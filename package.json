@@ -1,0 +1,50 @@
+{
+  "name": "pi-endpoint-model-memory",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Remember the last selected Pi model separately for each provider and API endpoint.",
+  "license": "MIT",
+  "author": "chenhaoxiang",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chenhaoxiang/pi-endpoint-model-memory.git"
+  },
+  "homepage": "https://github.com/chenhaoxiang/pi-endpoint-model-memory#readme",
+  "bugs": "https://github.com/chenhaoxiang/pi-endpoint-model-memory/issues",
+  "keywords": [
+    "pi-package",
+    "pi-extension",
+    "model",
+    "endpoint",
+    "memory"
+  ],
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "scripts": {
+    "test": "tsx --test test/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc -p tsconfig.build.json",
+    "audit:runtime": "npm audit --omit=dev --audit-level=high",
+    "check": "npm run typecheck && npm test && npm run build"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "0.99.1",
+    "@types/node": "22.19.19",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2"
+  }
+}
