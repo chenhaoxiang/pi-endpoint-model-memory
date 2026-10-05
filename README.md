@@ -1,5 +1,7 @@
 # pi-endpoint-model-memory
 
+English | [中文](README.zh-CN.md)
+
 按 Pi 的 **provider + API endpoint** 记住最近选择的模型。适合同时使用多个 OpenAI-compatible / Responses API 端点，例如 `codex-local` 与 `codex-local-8319`。
 
 ## 行为
