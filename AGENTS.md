@@ -15,7 +15,8 @@ Source changes must use an isolated branch/worktree. Never write the shared cano
 
 ## Documentation map
 
-- `README.md`: installation, selection precedence, commands, and limitations.
+- `README.md` / `README.zh-CN.md`: default English and full Chinese installation, selection precedence, commands, and limitations.
+- `docs/releasing.md`: original-project SemVer, PR-only main, GitHub Releases, asset checksums and isolated installation verification.
 - `docs/architecture/endpoint-model-memory.md`: owner behavior contract, state format, lifecycle decisions, and concurrency semantics.
 - `docs/verification/mvp.md`: local evidence and delivery boundaries.
 - `src/` / `test/`: implementation and provider-free regression tests.

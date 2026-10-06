@@ -39,12 +39,18 @@ codex-local-8319  → 最近使用 gpt-6-sol
 
 扩展只记录 TUI 中发生的 `model_select` 选择，不记录启动时的默认模型、会话恢复、reload 或非 TUI 运行。Pi 的公开 hook 无法区分 `/model` 与其他扩展调用 `setModel()`，因此其他扩展造成的模型切换也可能被记录为一次选择。
 
+## 发布与维护
+
+当前版本为 **0.1.0**。本项目是原创项目，使用普通 SemVer 和 `v<版本>` tag，不虚构社区上游或 `upstream-main` 分支。`main` 是维护与发布主线，通过 PR 更新。
+
+[GitHub Releases](https://github.com/chenhaoxiang/pi-endpoint-model-memory/releases) 提供可安装包、`release-manifest.json` 来源清单和 `SHA256SUMS`；下载后先校验，再解压到永久目录安装。每版本发布流程见[维护说明](docs/releasing.md)。GitHub 发布不等于 npm 发布，也不会自动重载运行中的会话。
+
 ## 安装
 
 从 GitHub 安装：
 
 ```bash
-pi install git:github.com/chenhaoxiang/pi-endpoint-model-memory
+pi install git:github.com/chenhaoxiang/pi-endpoint-model-memory@v0.1.0
 ```
 
 也可以在当前仓库临时加载：
