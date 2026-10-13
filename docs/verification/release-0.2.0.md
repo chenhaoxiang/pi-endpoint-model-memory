@@ -23,11 +23,13 @@ The owner approved last-selected provider/model restoration across channels and 
 - Reviewed head: `aaba11a0db99495fc3c4605c31127703fc8a5d57`.
 - Merged main/source commit: `00238d7085070cab8adf1891e2a12d45ce9e86e4`.
 - Remote main was fetched/read back and confirmed to contain the reviewed head.
-- Fresh independent source reviewer: `codex-local/deepseek-flash:high`; blocker 0, major 0, minor 1. Full final record is posted on PR #3 with SHA-256 `43e27f4b2a34a35370b64f1e6b263ba1092330b4ff2e1294038bab8f7471294e`.
+- Fresh read-only source reviewer in a separate child context under the same Owner account (not a second identity): `codex-local/deepseek-flash:high`; blocker 0, major 0, minor 1. Full final record is posted on PR #3 with SHA-256 `43e27f4b2a34a35370b64f1e6b263ba1092330b4ff2e1294038bab8f7471294e`.
 - The minor warning note is retained: even when provider/model already matches Pi's current choice, a no-longer-matching saved endpoint may produce a warning. It changes neither selection nor saved state.
 - PR checks read back as successful: GitGuardian Security Checks and `ai-pair-review`. The latter is a same-account review receipt, not an independent App identity or a second human approval. This personal repository has no Actions workflow/required CI checks and is not claimed to be registered for workspace AI auto-merge.
 
 ## Verification
+
+All rows below are local runs in isolated worktrees using synthetic catalogs and disposable agent directories; none is CI or a third-party re-run.
 
 | Target | Result |
 |---|---|
@@ -62,7 +64,7 @@ A before/after semantic comparison of global settings confirmed exactly one chan
 
 Already running sessions were not forcibly reloaded. Use `/reload` or restart Pi, then switch to the desired provider/model. If already active, switch away and back so Pi emits `model_select`. `/reload` itself never restores or records a choice. After a real selection, `status` shows the globally remembered provider/model and subsequent fresh sessions restore it subject to endpoint/scope/auth validation.
 
-The canonical local source main was safely fast-forwarded using the scoped `sync-local-mains.sh` entry; dirty/unrelated repositories were not touched.
+The canonical local source main was safely fast-forwarded using the shared-workspace helper `agent/sync-local-mains.sh` (the helper lives at the workspace root, outside this repository); dirty/unrelated repositories were not touched.
 
 ## Rollback
 
