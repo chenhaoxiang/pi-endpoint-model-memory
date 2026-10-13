@@ -36,16 +36,16 @@
 
 ## 发布与维护
 
-当前版本为 **0.1.0**。本项目是原创项目，使用普通 SemVer 和 `v<版本>` tag，不虚构社区上游或 `upstream-main` 分支。`main` 是维护与发布主线，通过 PR 更新。
+当前源码版本为 **0.2.0**。本项目是原创项目，使用普通 SemVer 和 `v<版本>` tag，不虚构社区上游或 `upstream-main` 分支。`main` 是维护与发布主线，通过 PR 更新。
 
 [GitHub Releases](https://github.com/chenhaoxiang/pi-endpoint-model-memory/releases) 提供可安装包、`release-manifest.json` 来源清单和 `SHA256SUMS`；下载后先校验，再解压到永久目录安装。每版本发布流程见[维护说明](docs/releasing.md)。GitHub 发布不等于 npm 发布，也不会自动重载运行中的会话。
 
 ## 安装
 
-上面的跨渠道恢复属于当前源码候选，已发布的 `v0.1.0` 仍按端点恢复，不包含这次修复。安装现有版本：
+上面的跨渠道恢复属于 `v0.2.0` 源码，已发布的 `v0.1.0` 仍按端点恢复，不包含这次修复。固定新版本安装：
 
 ```bash
-pi install git:github.com/chenhaoxiang/pi-endpoint-model-memory@v0.1.0
+pi install git:github.com/chenhaoxiang/pi-endpoint-model-memory@v0.2.0
 ```
 
 可以在当前候选仓库临时加载修复，不修改全局安装：
@@ -63,7 +63,7 @@ pi -e ./src/index.ts
 /endpoint-model-memory forget
 ```
 
-`status` 同时显示当前 endpoint 的记忆和全局最后选择的渠道/模型；`forget` 删除当前 endpoint 的记录，如果最后选择也指向该 endpoint，则一并清除。不改变当前模型，也不修改 Pi 的全局默认。
+`status` 同时显示当前 endpoint 的记忆和全局最后选择的渠道/模型；`forget` 删除当前 endpoint 的记录，如果最后选择也指向该 endpoint，则一并清除。不改变当前模型，也不修改 Pi 的全局默认。最后选择记录损坏或不可读时，仍可查看和删除合法的端点记录；损坏文件保留原字节，并明确提示最后选择未能核对或清除。
 
 单次关闭自动恢复：
 

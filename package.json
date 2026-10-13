@@ -1,8 +1,8 @@
 {
   "name": "pi-endpoint-model-memory",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
-  "description": "Remember the last selected Pi model separately for each provider and API endpoint.",
+  "description": "Restore the last selected Pi provider and model with endpoint validation and independent endpoint history.",
   "license": "MIT",
   "author": "chenhaoxiang",
   "repository": {

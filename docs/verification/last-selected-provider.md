@@ -39,7 +39,13 @@ After implementation:
 
 The 1.1.0 matrix was created under `tmp/verification/current-sdk/`: source/tests were copied and only the coding-agent SDK dependency was linked to the installed release's public package. It used the same synthetic providers, disposable agent directories, offline mode, no prompts, and no machine-wide configuration.
 
-Added coverage includes both cross-provider switch directions, identical model IDs, restart with a different default provider, `/new`, selection precedence, endpoint drift, missing models, corrupt global state, pointer privacy/permissions, same-process serialization, independent-store atomic writes, publish failure, confirmed forget, status, and v0.1 compatibility. Existing tests and assertions were not modified.
+Added coverage includes both cross-provider switch directions, identical model IDs, restart with a different default provider, `/new`, selection precedence, endpoint drift, missing models, corrupt global state, pointer privacy/permissions, same-process serialization, independent-store atomic writes, publish failure, confirmed forget, status, and v0.1 compatibility. Existing tests and assertions were not changed; additional tests were appended to the controller file during review follow-up.
+
+## Review follow-up and 0.2.0 source candidate
+
+Independent read-only review bound to `e7664670c14c27a28a182126fe444feeb321d995` returned `OK with notes`, blocker 0. Its new reachable P2 finding was reproduced: a corrupt global pointer blocked valid endpoint status/forget. The follow-up preserves corrupt pointer bytes, keeps current endpoint management usable, and reports sanitized partial-cleanup warnings. Global capability detection now requires both optional methods, and appended controller tests cover unsupported URLs, unsupported startup endpoints with valid pointers, silent no-op restoration, and incomplete injected store capabilities.
+
+The 0.2.0 candidate updates package/lock version metadata and both installation instructions. After the review follow-up, both pinned Pi 0.99.1 and installed Pi 1.1.0-fork.1 matrices pass **91/91**, typecheck and build. Package dry-run and runtime audit also pass. The original 85-test result above remains the initial evidence, not the final total.
 
 ## Remaining boundaries
 
@@ -47,5 +53,5 @@ Added coverage includes both cross-provider switch directions, identical model I
 - No credentials, auth commands, production model requests, settings defaults, or global memory were accessed by the tests.
 - The complete pointer is authoritative; endpoint history and the pointer are separate atomic files, not a multi-file transaction or distributed lock.
 - Pi's public hook still cannot distinguish another extension's `setModel()` from a manual selection.
-- Source self-review was performed. No independent subagent review, GitHub push/PR/merge, new release, npm publication, or machine-wide installation is claimed here.
-- The user's installed `v0.1.0` pin remains unchanged. `/reload` alone cannot load this candidate or establish a new last-choice record; installation requires a separately authorized update. Once loaded, switch to the desired model. If it is already active, switch away and back so Pi emits `model_select`.
+- Source self-review and an independent read-only `codex-local/deepseek-flash:high` review were performed. GitHub push/PR/merge, release publication, npm publication, and installation are not proven by source validation.
+- The owner additionally approved PR merge, a new GitHub release, and machine-wide upgrade. The installed `v0.1.0` pin remains unchanged at this source-validation stage. Once the update is loaded, switch to the desired model. If it is already active, switch away and back so Pi emits `model_select`.

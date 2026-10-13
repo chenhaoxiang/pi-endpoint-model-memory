@@ -15,7 +15,7 @@ export interface MemoryRecord {
 export interface MemoryStore {
   read(endpoint: Endpoint): Promise<MemoryRecord | undefined>;
   remember(endpoint: Endpoint, modelId: string): Promise<void>;
-  forget(endpoint: Endpoint): Promise<void>;
+  forget(endpoint: Endpoint): Promise<void | { lastSelectionUnavailable: boolean }>;
   // Optional for compatibility with injected endpoint-only stores.
   readLastSelection?(): Promise<MemoryRecord | undefined>;
   rememberSelection?(endpoint: Endpoint, modelId: string): Promise<void>;
@@ -128,15 +128,23 @@ export class FileMemoryStore implements MemoryStore {
     }
   }
 
-  forget(endpoint: Endpoint): Promise<void> {
+  async forget(endpoint: Endpoint): Promise<void | { lastSelectionUnavailable: boolean }> {
     const destination = recordPath(this.directory, endpoint);
-    return this.enqueue(async () => {
-      const lastPath = join(this.directory, "last-selection.json");
-      const last = await this.readRecord(lastPath);
+    let lastSelectionUnavailable = false;
+    await this.enqueue(async () => {
       await unlink(destination).catch((error: unknown) => { if (!isMissing(error)) throw error; });
-      if (last?.endpointKey === endpoint.key && last.provider === endpoint.provider) {
-        await unlink(lastPath).catch((error: unknown) => { if (!isMissing(error)) throw error; });
+      const lastPath = join(this.directory, "last-selection.json");
+      try {
+        const last = await this.readRecord(lastPath);
+        if (last?.endpointKey === endpoint.key && last.provider === endpoint.provider) {
+          await unlink(lastPath).catch((error: unknown) => { if (!isMissing(error)) throw error; });
+        }
+      } catch {
+        // Endpoint deletion succeeded. Preserve unreadable global bytes, but
+        // report that clearing the matching global choice could not be verified.
+        lastSelectionUnavailable = true;
       }
     });
+    if (lastSelectionUnavailable) return { lastSelectionUnavailable };
   }
 }

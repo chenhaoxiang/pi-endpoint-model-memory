@@ -30,13 +30,13 @@ Only TUI `model_select` events are remembered, not startup defaults, automatic m
 
 ## Install
 
-The cross-provider behavior above is the current source candidate. Published `v0.1.0` still uses endpoint-only restoration; installing that tag does **not** include this change. Install the existing reproducible release:
+The cross-provider behavior above is packaged as `v0.2.0`. Published `v0.1.0` keeps endpoint-only restoration and does **not** include this change. Install the pinned release:
 
 ```bash
-pi install git:github.com/chenhaoxiang/pi-endpoint-model-memory@v0.1.0
+pi install git:github.com/chenhaoxiang/pi-endpoint-model-memory@v0.2.0
 ```
 
-For the moving maintained branch, use `@main` after the change has been merged. To try this source candidate without installing:
+For the moving maintained branch, use `@main`. To try the current checkout without installing:
 
 ```bash
 pi -e ./src/index.ts
@@ -46,7 +46,7 @@ Restart Pi after installation, or `/reload` in an existing session. Reload itsel
 
 ## Releases and maintenance
 
-Current release: **0.1.0**. This original project uses ordinary SemVer and `v<version>` tags; it does not invent a community version or an `upstream-main` branch. `main` is the maintained default and release branch, updated through pull requests.
+Current source release: **0.2.0**. This original project uses ordinary SemVer and `v<version>` tags; it does not invent a community version or an `upstream-main` branch. `main` is the maintained default and release branch, updated through pull requests.
 
 [GitHub Releases](https://github.com/chenhaoxiang/pi-endpoint-model-memory/releases) provide an installable tarball, `release-manifest.json`, and `SHA256SUMS`. Verify checksums before installing downloaded assets. See [release maintenance](docs/releasing.md) for the per-version publishing and artifact installation process. A GitHub release does not imply npm publication or hot reload of active sessions.
 
@@ -57,7 +57,7 @@ Current release: **0.1.0**. This original project uses ordinary SemVer and `v<ve
 /endpoint-model-memory forget
 ```
 
-`status` displays the current endpoint record and the globally last selected provider/model. `forget` deletes only that endpoint’s memory and clears the last-choice record if it points to that endpoint, without changing the active model or global default. Disable automatic behavior for one invocation:
+`status` displays the current endpoint record and the globally last selected provider/model. `forget` deletes only that endpoint’s memory and clears the last-choice record if it points to that endpoint, without changing the active model or global default. A corrupt or unreadable last-choice record does not block status or deletion of a valid endpoint record; its bytes are preserved and a sanitized warning reports the incomplete global cleanup. Disable automatic behavior for one invocation:
 
 ```bash
 pi --endpoint-model-memory off

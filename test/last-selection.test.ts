@@ -244,6 +244,31 @@ test("corrupt global state reports a sanitized warning and preserves original se
   } finally { await cleanup(h.root); }
 });
 
+test("corrupt global state does not block current endpoint status or confirmed forget", async () => {
+  const h = await host();
+  try {
+    await h.select("codex-local");
+    await h.select("zai-coding-cn");
+    const path = join(h.directory, "last-selection.json");
+    const bytes = "invalid JSON with synthetic-private-value";
+    await writeFile(path, bytes);
+    const next = await h.create({ launch: { explicitSelection: true } });
+    try {
+      await next.session.prompt("/endpoint-model-memory status");
+      assert.match(next.notifications.at(-1)!, /Saved: recent/u);
+      assert.match(next.notifications.at(-1)!, /Last selected: unavailable/u);
+      await next.session.prompt("/endpoint-model-memory forget");
+      assert.equal(await next.store.read(endpointFor(h.runtime.getModel("codex-local", "recent")!)!), undefined);
+      assert.equal((await next.store.read(endpointFor(h.runtime.getModel("zai-coding-cn", "recent")!)!))?.modelId, "recent");
+      assert.ok(next.notifications.some((message) => message.includes("current endpoint's choice removed")));
+      assert.ok(next.notifications.some((message) => message.includes("last selection could not be accessed")));
+      assert.ok(next.notifications.every((message) => !message.includes("synthetic-private-value")));
+      assert.equal(await readFile(path, "utf8"), bytes);
+      assert.equal(next.session.model?.provider, "codex-local");
+    } finally { next.session.dispose(); }
+  } finally { await cleanup(h.root); }
+});
+
 test("confirmed forget clears the current global choice but leaves other endpoints intact", async () => {
   const h = await host();
   try {
