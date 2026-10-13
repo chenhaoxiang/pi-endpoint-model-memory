@@ -215,6 +215,20 @@ test("unsupported selected endpoints report the exclusion without updating memor
   assert.equal(h.notices.at(-1)!.type, "warning");
 });
 
+test("status exposes the global choice even when the current endpoint is unsupported", async () => {
+  const h = harness();
+  h.ctx.model = fakeModel("unsupported", "startup", "not a URL");
+  Object.assign(h.store, {
+    readLastSelection: async () => ({
+      version: 1, endpointKey: h.endpoint.key, provider: h.candidate.provider,
+      modelId: h.candidate.id, updatedAt: "2026-10-14T00:00:00.000Z",
+    }),
+    rememberSelection: async () => { throw new Error("status must not write"); },
+  });
+  await h.command();
+  assert.match(h.notices.at(-1)!.message, /Last selected: codex-local\/gpt-6\.1-sol/u);
+});
+
 test("a valid global choice can restore even when the startup endpoint is unsupported", async () => {
   const h = harness();
   h.ctx.model = fakeModel("unsupported", "startup", "not a URL");

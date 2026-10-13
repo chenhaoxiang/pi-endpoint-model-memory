@@ -45,7 +45,7 @@ Added coverage includes both cross-provider switch directions, identical model I
 
 Independent read-only review bound to `e7664670c14c27a28a182126fe444feeb321d995` returned `OK with notes`, blocker 0. Its new reachable P2 finding was reproduced: a corrupt global pointer blocked valid endpoint status/forget. The follow-up preserves corrupt pointer bytes, keeps current endpoint management usable, and reports sanitized partial-cleanup warnings. Global capability detection now requires both optional methods, and appended controller tests cover unsupported URLs, unsupported startup endpoints with valid pointers, silent no-op restoration, and incomplete injected store capabilities.
 
-The 0.2.0 candidate updates package/lock version metadata and both installation instructions. After the review follow-up, both pinned Pi 0.99.1 and installed Pi 1.1.0-fork.1 matrices pass **91/91**, typecheck and build. Package dry-run and runtime audit also pass. The original 85-test result above remains the initial evidence, not the final total.
+The 0.2.0 candidate updates package/lock version metadata and both installation instructions. After the review follow-up, both pinned Pi 0.99.1 and installed Pi 1.1.0-fork.1 matrices pass **91/91**, typecheck and build. Package dry-run and runtime audit also pass. The original 85-test result above remains the initial evidence. A final source-only follow-up makes global status visible even when the current model has an unsupported endpoint; its regression test brings both SDK matrices to **92/92**. Final raw logs are under `tmp/verification/final-92-*.log`.
 
 ## Remaining boundaries
 

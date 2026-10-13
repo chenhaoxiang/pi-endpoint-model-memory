@@ -97,8 +97,22 @@ export function registerModelMemory(pi: ExtensionAPI, options: ControllerOptions
       }
       if (ctx.mode !== "tui") return;
       const endpoint = ctx.model ? endpointFor(ctx.model) : undefined;
+      const latestSelection = async (): Promise<string> => {
+        if (!(store.readLastSelection && store.rememberSelection)) return "No globally remembered selection.";
+        try {
+          const last = await store.readLastSelection();
+          return last ? `Last selected: ${last.provider}/${last.modelId}\nLast updated: ${last.updatedAt}` : "No globally remembered selection.";
+        } catch {
+          return "Last selected: unavailable (saved state is corrupt or unreadable).";
+        }
+      };
       if (!endpoint) {
-        ctx.ui.notify("Endpoint model memory: the current model has no supported configured endpoint.", "warning");
+        if (action === "forget") {
+          ctx.ui.notify("Endpoint model memory: the current model has no supported configured endpoint.", "warning");
+        } else {
+          const state = enabled(ctx) ? "enabled" : "disabled";
+          ctx.ui.notify(`Endpoint model memory (${state}): current model has no supported configured endpoint.\n${await latestSelection()}`, "info");
+        }
         return;
       }
       try {
@@ -115,15 +129,7 @@ export function registerModelMemory(pi: ExtensionAPI, options: ControllerOptions
         const record = await store.read(endpoint);
         const state = enabled(ctx) ? "enabled" : "disabled";
         const current = record ? `Saved: ${record.modelId}\nUpdated: ${record.updatedAt}` : "No saved model for this endpoint.";
-        let latest = "No globally remembered selection.";
-        if (store.readLastSelection && store.rememberSelection) {
-          try {
-            const last = await store.readLastSelection();
-            latest = last ? `Last selected: ${last.provider}/${last.modelId}\nLast updated: ${last.updatedAt}` : latest;
-          } catch {
-            latest = "Last selected: unavailable (saved state is corrupt or unreadable).";
-          }
-        }
+        const latest = await latestSelection();
         ctx.ui.notify(`Endpoint model memory (${state}): ${endpoint.provider} [${endpoint.key.slice(0, 12)}]\n${current}\n${latest}`, "info");
       } catch {
         ctx.ui.notify("Endpoint model memory: could not access saved state.", "warning");
