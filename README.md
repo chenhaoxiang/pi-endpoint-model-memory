@@ -2,35 +2,38 @@
 
 English | [中文](README.zh-CN.md)
 
-Remember the most recently selected Pi model separately for each **provider + API endpoint**. Useful when several OpenAI-compatible or Responses endpoints expose different models. This is an independent project, not a fork of another Pi extension.
+Remember the last selected **provider + model**, with API-endpoint validation and independent endpoint history. Useful when switching between custom endpoints and built-in providers. This is an independent project, not a fork of another Pi extension.
 
 ## Behavior
 
 For a new interactive TUI session or `/new`:
 
-1. Pi first selects its provider/endpoint using its own settings.
-2. The extension looks up memory only for that endpoint.
-3. It restores the previous model only if the model remains available within the current scope and the same endpoint.
-4. Otherwise it keeps Pi’s original selection.
+1. Pi first selects its ordinary startup model.
+2. The extension reads the last interactive choice, including its provider.
+3. It restores that provider/model only if the registered model still matches its saved endpoint, has configured auth, and remains within the current scope.
+4. Otherwise it visibly keeps Pi’s original selection; it does not fall back to an older provider.
 
-An endpoint’s recent selection never causes Pi to switch to another endpoint. Endpoint identity combines provider, the configured model-catalog base URL, and API type.
+For example, selecting `zai-coding-cn/glm-5.3` after `codex-local/gpt-6.1-sol` restores `zai-coding-cn/glm-5.3` in the next fresh session. Endpoint identity still combines provider, configured model-catalog base URL, and API type. Models are never restored onto a different endpoint than the one they were selected on.
+
+If there is no last-choice record yet, existing v0.1.0 endpoint files retain their original endpoint-only behavior. Switch to the desired model once after loading the update to start remembering the complete choice; if it is already active, switch away and back so Pi emits a selection event. Old timestamps are not used to guess the last provider.
 
 ### Selection precedence
 
 - Explicit `--model`, `--models`, or `--api-key`: keep the explicit choice.
+- Provider-only selection in compatible Pi versions: query only that provider’s startup endpoint, never another provider.
 - `--continue`, `--resume`, `--session`, `--fork`, or an existing conversation: retain the conversation model.
 - `/resume`, `/fork`, and `/reload`: do not apply automatic restoration.
-- New interactive sessions only: restore endpoint-scoped memory.
+- New interactive sessions only: restore the last provider/model, validated against its remembered endpoint.
 - Pi’s native `Ctrl+S` can still save its global default; this extension never rewrites `settings.json`.
 
-Only TUI `model_select` events are remembered, not startup defaults, session restoration, reload, or non-TUI runs. Pi’s public hook cannot distinguish `/model` from another extension’s `setModel()`, so other extensions’ model changes may also be recorded.
+Only TUI `model_select` events are remembered, not startup defaults, automatic memory restoration, session restoration, reload, or non-TUI runs. Pi’s public hook cannot distinguish `/model` from another extension’s `setModel()`, so other extensions’ model changes may also be recorded.
 
 ## Install
 
-Install the reproducible release:
+The cross-provider behavior above is packaged as `v0.2.0`. Published `v0.1.0` keeps endpoint-only restoration and does **not** include this change. Install the pinned release:
 
 ```bash
-pi install git:github.com/chenhaoxiang/pi-endpoint-model-memory@v0.1.0
+pi install git:github.com/chenhaoxiang/pi-endpoint-model-memory@v0.2.0
 ```
 
 For the moving maintained branch, use `@main`. To try the current checkout without installing:
@@ -43,7 +46,7 @@ Restart Pi after installation, or `/reload` in an existing session. Reload itsel
 
 ## Releases and maintenance
 
-Current release: **0.1.0**. This original project uses ordinary SemVer and `v<version>` tags; it does not invent a community version or an `upstream-main` branch. `main` is the maintained default and release branch, updated through pull requests.
+Current source release: **0.2.0**. This original project uses ordinary SemVer and `v<version>` tags; it does not invent a community version or an `upstream-main` branch. `main` is the maintained default and release branch, updated through pull requests.
 
 [GitHub Releases](https://github.com/chenhaoxiang/pi-endpoint-model-memory/releases) provide an installable tarball, `release-manifest.json`, and `SHA256SUMS`. Verify checksums before installing downloaded assets. See [release maintenance](docs/releasing.md) for the per-version publishing and artifact installation process. A GitHub release does not imply npm publication or hot reload of active sessions.
 
@@ -54,7 +57,7 @@ Current release: **0.1.0**. This original project uses ordinary SemVer and `v<ve
 /endpoint-model-memory forget
 ```
 
-`status` displays the current endpoint record. `forget` deletes only that endpoint’s memory without changing the active model or global default. Disable automatic behavior for one invocation:
+`status` displays the current endpoint record and the globally last selected provider/model. `forget` deletes only that endpoint’s memory and clears the last-choice record if it points to that endpoint, without changing the active model or global default. A corrupt or unreadable last-choice record does not block status or deletion of a valid endpoint record; its bytes are preserved and a sanitized warning reports the incomplete global cleanup. Disable automatic behavior for one invocation:
 
 ```bash
 pi --endpoint-model-memory off
@@ -62,7 +65,7 @@ pi --endpoint-model-memory off
 
 ## Storage and privacy
 
-The default storage directory is `<PI_CODING_AGENT_DIR>/endpoint-model-memory/`, normally `~/.pi/agent/endpoint-model-memory/`. Each endpoint has a SHA-256-named file, written via a temporary file and atomic rename. Concurrent writes to the same endpoint are last-completed-write wins; records never cross endpoints.
+The default storage directory is `<PI_CODING_AGENT_DIR>/endpoint-model-memory/`, normally `~/.pi/agent/endpoint-model-memory/`. Each endpoint has a SHA-256-named file; `last-selection.json` holds the complete latest choice. Both use private temporary files and atomic rename. Same-process selections serialize; across processes, the last completed rename for each file wins. The last-choice record is authoritative, so endpoint history cannot override it. These files are not a multi-file transaction.
 
 Records contain only schema version, endpoint digest, provider, model ID, and update time. They never contain API keys, headers, prompts, conversation contents, or raw URLs. The extension does not run `!command` credential resolvers or probe real endpoints. Set `PI_CODING_AGENT_DIR` to relocate Pi’s agent directory and its endpoint memory. Tests do not access machine-wide memory.
 
@@ -84,7 +87,7 @@ Tests use synthetic models, temporary directories, and provider-free state. They
 
 ## Boundaries
 
-This extension only remembers recently selected models by endpoint. It does not provide model health checks, automatic fallback, endpoint restart, credential refresh, global settings edits, or production API acceptance.
+This extension remembers the last selected provider/model and retains endpoint-specific history. It does not provide model health checks, automatic fallback, endpoint restart, credential refresh, global settings edits, or production API acceptance.
 
 ## License
 

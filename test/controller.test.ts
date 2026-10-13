@@ -206,3 +206,69 @@ test("status and confirmed forget affect only the current endpoint, not Pi's act
   assert.equal(h.ctx.model, h.original);
   await h.command("invalid"); assert.match(h.notices.at(-1)!.message, /Usage:/u);
 });
+
+test("unsupported selected endpoints report the exclusion without updating memory", async () => {
+  const h = harness();
+  await h.select("set", fakeModel("unsupported", "model", "not a URL"));
+  assert.equal(h.store.writes, 0);
+  assert.match(h.notices.at(-1)!.message, /choice was not saved/u);
+  assert.equal(h.notices.at(-1)!.type, "warning");
+});
+
+test("status exposes the global choice even when the current endpoint is unsupported", async () => {
+  const h = harness();
+  h.ctx.model = fakeModel("unsupported", "startup", "not a URL");
+  Object.assign(h.store, {
+    readLastSelection: async () => ({
+      version: 1, endpointKey: h.endpoint.key, provider: h.candidate.provider,
+      modelId: h.candidate.id, updatedAt: "2026-10-14T00:00:00.000Z",
+    }),
+    rememberSelection: async () => { throw new Error("status must not write"); },
+  });
+  await h.command();
+  assert.match(h.notices.at(-1)!.message, /Last selected: codex-local\/gpt-6\.1-sol/u);
+});
+
+test("a valid global choice can restore even when the startup endpoint is unsupported", async () => {
+  const h = harness();
+  h.ctx.model = fakeModel("unsupported", "startup", "not a URL");
+  Object.assign(h.store, {
+    readLastSelection: async () => ({
+      version: 1, endpointKey: h.endpoint.key, provider: h.candidate.provider,
+      modelId: h.candidate.id, updatedAt: "2026-10-14T00:00:00.000Z",
+    }),
+    rememberSelection: async () => { throw new Error("automatic restoration must not write"); },
+  });
+  await h.start();
+  assert.equal(h.ctx.model, h.candidate);
+  assert.equal(h.store.writes, 0);
+});
+
+test("a global choice matching the startup provider/model is a silent no-op", async () => {
+  const h = harness();
+  Object.assign(h.store, {
+    readLastSelection: async () => ({
+      version: 1, endpointKey: h.endpoint.key, provider: h.original.provider,
+      modelId: h.original.id, updatedAt: "2026-10-14T00:00:00.000Z",
+    }),
+    rememberSelection: async () => { throw new Error("no-op must not write"); },
+  });
+  await h.start();
+  assert.equal(h.ctx.model, h.original);
+  assert.equal(h.state.selected, 0);
+  assert.deepEqual(h.notices, []);
+});
+
+for (const method of ["readLastSelection", "rememberSelection"]) {
+  test(`an injected store with only ${method} remains endpoint-only`, async () => {
+    const h = harness(); h.seed();
+    let globalCalls = 0;
+    Object.assign(h.store, { [method]: async () => { globalCalls++; throw new Error("incomplete capability"); } });
+    await h.start();
+    assert.equal(h.ctx.model, h.candidate);
+    await h.select();
+    await h.command();
+    assert.equal(globalCalls, 0);
+    assert.equal(h.store.writes, 1);
+  });
+}

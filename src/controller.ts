@@ -32,23 +32,28 @@ export function registerModelMemory(pi: ExtensionAPI, options: ControllerOptions
         launch.explicitSelection || (event.reason === "startup" && launch.sessionSelection) || !ctx.model) return;
     if (ctx.sessionManager.getBranch().some((entry) =>
       ["message", "custom_message", "compaction", "branch_summary"].includes(entry.type))) return;
-    const original = ctx.model;
-    const endpoint = endpointFor(original);
-    if (!endpoint) return;
+    const original = { provider: ctx.model.provider, id: ctx.model.id };
+    const startupEndpoint = endpointFor(ctx.model);
     try {
-      const remembered = await store.read(endpoint);
-      if (!remembered || remembered.modelId === original.id) return;
-      const candidate = ctx.modelRegistry.find(endpoint.provider, remembered.modelId);
+      // An explicit provider keeps endpoint-only behavior. Without a last-choice
+      // pointer, v0.1 records also remain usable without guessing global recency.
+      const last = !launch.explicitProvider && store.readLastSelection && store.rememberSelection
+        ? await store.readLastSelection() : undefined;
+      const remembered = last ?? (startupEndpoint ? await store.read(startupEndpoint) : undefined);
+      if (!remembered) return;
+      const candidate = ctx.modelRegistry.find(remembered.provider, remembered.modelId);
       const allowed = ctx.scopedModels.length === 0 || ctx.scopedModels.some((item) =>
-        item.model.provider === candidate?.provider && item.model.id === candidate.id);
-      if (!candidate || endpointFor(candidate)?.key !== endpoint.key || !allowed ||
+        item.model.provider === candidate?.provider && item.model.id === candidate?.id);
+      if (!candidate || endpointFor(candidate)?.key !== remembered.endpointKey || !allowed ||
           !ctx.modelRegistry.hasConfiguredAuth(candidate)) {
-        ctx.ui.notify("Endpoint model memory: saved model is unavailable for this endpoint/scope; keeping Pi's selection.", "warning");
+        // Never fall back to an older provider when the last choice is unusable.
+        ctx.ui.notify("Endpoint model memory: saved model is unavailable for its endpoint/scope; keeping Pi's selection.", "warning");
         return;
       }
+      if (candidate.provider === original.provider && candidate.id === original.id) return;
       // Guard a concurrent selection while disk state was being read.
       if (ctx.model?.provider !== original.provider || ctx.model.id !== original.id ||
-          endpointFor(ctx.model)?.key !== endpoint.key) return;
+          endpointFor(ctx.model)?.key !== startupEndpoint?.key) return;
       const thinking = pi.getThinkingLevel();
       restoring = true;
       try {
@@ -70,16 +75,20 @@ export function registerModelMemory(pi: ExtensionAPI, options: ControllerOptions
   pi.on("model_select", async (event: ModelSelectEvent, ctx) => {
     if (!enabled(ctx) || restoring || event.source === "restore") return;
     const endpoint = endpointFor(event.model);
-    if (!endpoint) return;
+    if (!endpoint) {
+      ctx.ui.notify("Endpoint model memory: this model has no supported configured endpoint; choice was not saved.", "warning");
+      return;
+    }
     try {
-      await store.remember(endpoint, event.model.id);
+      if (store.readLastSelection && store.rememberSelection) await store.rememberSelection(endpoint, event.model.id);
+      else await store.remember(endpoint, event.model.id);
     } catch {
       ctx.ui.notify("Endpoint model memory: could not save the model choice; active model is unchanged.", "warning");
     }
   });
 
   pi.registerCommand("endpoint-model-memory", {
-    description: "Inspect endpoint model memory, or forget the current endpoint's choice",
+    description: "Inspect endpoint model memory and the last provider/model choice, or forget the current endpoint's choice",
     handler: async (args, ctx) => {
       const action = args.trim() || "status";
       if (!["status", "forget"].includes(action)) {
@@ -88,22 +97,40 @@ export function registerModelMemory(pi: ExtensionAPI, options: ControllerOptions
       }
       if (ctx.mode !== "tui") return;
       const endpoint = ctx.model ? endpointFor(ctx.model) : undefined;
+      const latestSelection = async (): Promise<string> => {
+        if (!(store.readLastSelection && store.rememberSelection)) return "No globally remembered selection.";
+        try {
+          const last = await store.readLastSelection();
+          return last ? `Last selected: ${last.provider}/${last.modelId}\nLast updated: ${last.updatedAt}` : "No globally remembered selection.";
+        } catch {
+          return "Last selected: unavailable (saved state is corrupt or unreadable).";
+        }
+      };
       if (!endpoint) {
-        ctx.ui.notify("Endpoint model memory: the current model has no supported configured endpoint.", "warning");
+        if (action === "forget") {
+          ctx.ui.notify("Endpoint model memory: the current model has no supported configured endpoint.", "warning");
+        } else {
+          const state = enabled(ctx) ? "enabled" : "disabled";
+          ctx.ui.notify(`Endpoint model memory (${state}): current model has no supported configured endpoint.\n${await latestSelection()}`, "info");
+        }
         return;
       }
       try {
         if (action === "forget") {
-          if (await ctx.ui.confirm("Forget endpoint model memory?", "Remove only this endpoint's saved choice? The active model and Pi defaults will not change.")) {
-            await store.forget(endpoint);
+          if (await ctx.ui.confirm("Forget endpoint model memory?", "Remove this endpoint's saved choice and clear it if it is the last selected provider/model? The active model and Pi defaults will not change.")) {
+            const result = await store.forget(endpoint);
             ctx.ui.notify("Endpoint model memory: current endpoint's choice removed.", "info");
+            if (result && "lastSelectionUnavailable" in result && result.lastSelectionUnavailable) {
+              ctx.ui.notify("Endpoint model memory: last selection could not be accessed; its saved bytes were preserved.", "warning");
+            }
           }
           return;
         }
         const record = await store.read(endpoint);
         const state = enabled(ctx) ? "enabled" : "disabled";
-        ctx.ui.notify(`Endpoint model memory (${state}): ${endpoint.provider} [${endpoint.key.slice(0, 12)}]\n` +
-          (record ? `Saved: ${record.modelId}\nUpdated: ${record.updatedAt}` : "No saved model for this endpoint."), "info");
+        const current = record ? `Saved: ${record.modelId}\nUpdated: ${record.updatedAt}` : "No saved model for this endpoint.";
+        const latest = await latestSelection();
+        ctx.ui.notify(`Endpoint model memory (${state}): ${endpoint.provider} [${endpoint.key.slice(0, 12)}]\n${current}\n${latest}`, "info");
       } catch {
         ctx.ui.notify("Endpoint model memory: could not access saved state.", "warning");
       }

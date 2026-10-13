@@ -6,7 +6,8 @@ Source changes must use an isolated branch/worktree. Never write the shared cano
 
 ## Behavior and verification
 
-- Endpoint memory is scoped by provider + configured catalog base URL + API type. Never cross endpoints while restoring.
+- Actual TUI selections remember the complete provider + model and its endpoint digest. Fresh startup may restore the last provider/model across channels only after the saved endpoint, scope, and configured auth validate; never cross endpoints.
+- If no global last-choice record exists, legacy endpoint-only records remain usable. An unusable global choice keeps Pi's startup model and never falls back to older provider history.
 - Explicit CLI model/scope/auth choices, existing conversations, resume/fork, reload, and non-TUI runtimes must retain Pi's selection.
 - Automatic restores must not update the remembered choice. Other extensions' `setModel()` events cannot be distinguished from manual choices by Pi's public hook; disclose this limitation.
 - Failure must retain Pi's original model and report a sanitized warning. Do not persist credentials, raw URLs, headers, prompts, or private conversation data.
@@ -17,6 +18,8 @@ Source changes must use an isolated branch/worktree. Never write the shared cano
 
 - `README.md` / `README.zh-CN.md`: default English and full Chinese installation, selection precedence, commands, and limitations.
 - `docs/releasing.md`: original-project SemVer, PR-only main, GitHub Releases, asset checksums and isolated installation verification.
-- `docs/architecture/endpoint-model-memory.md`: owner behavior contract, state format, lifecycle decisions, and concurrency semantics.
-- `docs/verification/mvp.md`: local evidence and delivery boundaries.
+- `docs/architecture/endpoint-model-memory.md`: owner behavior contract, cross-provider restoration, state format, lifecycle decisions, and concurrency semantics.
+- `test/last-selection.test.ts` / `test/last-selection-store.test.ts`: cross-provider regression and persisted last-choice coverage.
+- `docs/verification/mvp.md`: original v0.1.0 local evidence snapshot and delivery boundaries.
+- `docs/verification/last-selected-provider.md`: 2026-10-14 cross-provider regression evidence and remaining delivery boundaries.
 - `src/` / `test/`: implementation and provider-free regression tests.
