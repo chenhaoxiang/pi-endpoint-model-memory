@@ -22,4 +22,5 @@ Source changes must use an isolated branch/worktree. Never write the shared cano
 - `test/last-selection.test.ts` / `test/last-selection-store.test.ts`: cross-provider regression and persisted last-choice coverage.
 - `docs/verification/mvp.md`: original v0.1.0 local evidence snapshot and delivery boundaries.
 - `docs/verification/last-selected-provider.md`: 2026-10-14 cross-provider regression evidence and remaining delivery boundaries.
+- `docs/verification/release-0.2.0.md`: v0.2.0 PR/release checksums, downloaded-asset verification, local installation, reload boundary, and rollback.
 - `src/` / `test/`: implementation and provider-free regression tests.
