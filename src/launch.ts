@@ -4,6 +4,7 @@ import { parseArgs } from "@earendil-works/pi-coding-agent";
 export interface LaunchPolicy {
   cliHost: boolean;
   explicitSelection: boolean;
+  explicitProvider?: boolean;
   sessionSelection: boolean;
   explicitThinking: boolean;
   ephemeral: boolean;
@@ -17,6 +18,7 @@ export function launchPolicy(argv: readonly string[]): LaunchPolicy {
     cliHost: /^(?:pi(?:\.exe)?|cli\.(?:js|mjs|cjs|ts))$/u.test(entry),
     explicitSelection: parsed.model !== undefined || parsed.models !== undefined || parsed.apiKey !== undefined ||
       parsed.diagnostics.length > 0 || [...parsed.unknownFlags.keys()].some((flag) => flag !== "endpoint-model-memory"),
+    explicitProvider: parsed.provider !== undefined,
     sessionSelection: Boolean(parsed.continue || parsed.resume || parsed.session || parsed.sessionId || parsed.fork),
     explicitThinking: parsed.thinking !== undefined,
     ephemeral: Boolean(parsed.noSession),

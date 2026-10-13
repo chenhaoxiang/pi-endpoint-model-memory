@@ -2,7 +2,7 @@
 
 [English](README.md) | 中文
 
-一个 Pi 扩展，按 **provider + API endpoint** 记住最近选择的模型。适合同时使用多个 OpenAI-compatible 或 Responses API 端点，例如 `codex-local` 和 `codex-local-8319`。
+一个 Pi 扩展，记住最后选择的完整 **provider + model**，同时校验 API endpoint 并保留各端点的独立历史。适合在 `codex-local` 等自定义渠道与 `zai-coding-cn` 等内置渠道之间切换。
 
 本项目是独立的 Pi 扩展，不属于 `pi-subagents`、`pi-intercom` 或其他 Pi fork。
 
@@ -10,21 +10,16 @@
 
 在全新交互式 TUI 会话或 `/new` 中：
 
-1. Pi 先按自身默认配置选定 provider/endpoint；
-2. 扩展只查询这个 endpoint 的模型记忆；
-3. 如果存在同 endpoint、当前仍可用且处于当前 scope 的历史模型，就恢复该模型；
-4. 没有可用历史时，保持 Pi 原来的选择。
+1. Pi 先按自身默认配置选定启动模型；
+2. 扩展读取最后一次交互选择，包括渠道和模型；
+3. 如果该模型仍在模型目录中、endpoint 与保存时一致、已配置认证且处于当前 scope，就恢复完整选择；
+4. 无法恢复时，提示原因并保持 Pi 原来的选择，不退回某个旧渠道的历史模型。
 
-不同 endpoint 完全隔离。一个 endpoint 最近使用过的模型，不会让 Pi 自动切换到另一个 endpoint。
+例如，先选择 `codex-local/gpt-6.1-sol`，再选择 `zai-coding-cn/glm-5.3`，下次全新会话会恢复 `zai-coding-cn/glm-5.3`，而不是再次回到 `codex-local`。
 
-例如：
+各 endpoint 的历史仍然独立；跨渠道恢复必须匹配该模型保存时的 endpoint，不能把模型套到另一端点。
 
-```text
-codex-local       → 最近使用 kimi-k3
-codex-local-8319  → 最近使用 gpt-6-sol
-```
-
-新会话进入对应 endpoint 后，只会恢复该 endpoint 的记录。
+升级后如果还没有最后选择记录，旧版 0.1.0 的端点记录继续按原规则使用。加载更新后切换到想要的模型，就会开始记忆完整的渠道和模型；如果它已是当前模型，先切到其他模型再切回来，确保 Pi 发出选择事件。不会根据旧记录的时间戳猜测最后渠道。
 
 ## 选择优先级
 
@@ -35,9 +30,9 @@ codex-local-8319  → 最近使用 gpt-6-sol
 - 执行 `/resume`、`/fork` 或 `/reload`；
 - 非 TUI 运行。
 
-只有全新的交互式会话，才会应用对应 endpoint 最近记住的模型。Pi 原生 `Ctrl+S` 仍然可以保存全局默认模型；本扩展不会改写 `settings.json`。
+只有全新的交互式会话，才会恢复最后选择的完整渠道和模型。兼容版本中如果仅显式指定 `--provider`，则只恢复该启动端点的模型，不切换到其他渠道。Pi 原生 `Ctrl+S` 仍然可以保存全局默认模型；本扩展不会改写 `settings.json`。
 
-扩展只记录 TUI 中发生的 `model_select` 选择，不记录启动时的默认模型、会话恢复、reload 或非 TUI 运行。Pi 的公开 hook 无法区分 `/model` 与其他扩展调用 `setModel()`，因此其他扩展造成的模型切换也可能被记录为一次选择。
+扩展只记录 TUI 中发生的 `model_select` 选择，不记录启动时的默认模型、扩展自己的自动恢复、会话恢复、reload 或非 TUI 运行。Pi 的公开 hook 无法区分 `/model` 与其他扩展调用 `setModel()`，因此其他扩展造成的模型切换也可能被记录为一次选择。
 
 ## 发布与维护
 
@@ -47,13 +42,13 @@ codex-local-8319  → 最近使用 gpt-6-sol
 
 ## 安装
 
-从 GitHub 安装：
+上面的跨渠道恢复属于当前源码候选，已发布的 `v0.1.0` 仍按端点恢复，不包含这次修复。安装现有版本：
 
 ```bash
 pi install git:github.com/chenhaoxiang/pi-endpoint-model-memory@v0.1.0
 ```
 
-也可以在当前仓库临时加载：
+可以在当前候选仓库临时加载修复，不修改全局安装：
 
 ```bash
 pi -e ./src/index.ts
@@ -68,7 +63,7 @@ pi -e ./src/index.ts
 /endpoint-model-memory forget
 ```
 
-`status` 查看当前 endpoint 的记忆；`forget` 只删除当前 endpoint 的记录，不改变当前模型，也不修改 Pi 的全局默认。
+`status` 同时显示当前 endpoint 的记忆和全局最后选择的渠道/模型；`forget` 删除当前 endpoint 的记录，如果最后选择也指向该 endpoint，则一并清除。不改变当前模型，也不修改 Pi 的全局默认。
 
 单次关闭自动恢复：
 
@@ -90,7 +85,7 @@ pi --endpoint-model-memory off
 ~/.pi/agent/endpoint-model-memory/
 ```
 
-每个 endpoint 使用一个 SHA-256 文件。写入采用临时文件加原子 rename；同一个 endpoint 的并发写入以最后完成的原子写入为准，不会跨 endpoint 覆盖。
+每个 endpoint 使用一个 SHA-256 文件，另用 `last-selection.json` 保存完整的最后选择。两种记录都采用私有临时文件加原子 rename；同一进程内的选择按顺序写入，跨进程以每个文件最后完成的原子写入为准。恢复以最后选择记录为准，旧端点历史不会覆盖它；两个文件不构成跨文件事务。
 
 记录只包含：
 
@@ -122,7 +117,7 @@ npm pack --dry-run --json
 
 ## 边界
 
-本项目只负责“按 endpoint 记住最近模型”。它不负责：
+本项目只负责“记住最后选择的渠道和模型，并保留端点历史”。它不负责：
 
 - 模型健康检查；
 - 自动 fallback；
