@@ -62,7 +62,7 @@ pi install git:github.com/chenhaoxiang/pi-endpoint-model-memory@v0.2.0
 
 A before/after semantic comparison of global settings confirmed exactly one change: the endpoint-model-memory package pin moved from `v0.1.0` to `v0.2.0`. Model defaults and all other settings/package entries remained unchanged. Installed source files match the downloaded package, and installed Git HEAD/tag point to the released source SHA. No credentials or global model-memory records were written by validation.
 
-Already running sessions were not forcibly reloaded. Use `/reload` or restart Pi, then switch to the desired provider/model. If already active, switch away and back so Pi emits `model_select`. `/reload` itself never restores or records a choice. After a real selection, `status` shows the globally remembered provider/model and subsequent fresh sessions restore it subject to endpoint/scope/auth validation.
+Already running sessions were not forcibly reloaded. Use `/reload` or restart Pi, then switch to the desired provider/model. If already active, switch away and back so Pi emits `model_select`. `/reload` itself does not apply automatic restoration; make a real selection after reloading to establish or update the pointer. The live reload record path remains unverified at this closeout snapshot. After a real selection, `status` shows the globally remembered provider/model and subsequent fresh sessions restore it subject to endpoint/scope/auth validation.
 
 The canonical local source main was safely fast-forwarded using the shared-workspace helper `agent/sync-local-mains.sh` (the helper lives at the workspace root, outside this repository); dirty/unrelated repositories were not touched.
 
