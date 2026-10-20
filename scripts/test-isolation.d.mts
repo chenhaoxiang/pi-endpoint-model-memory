@@ -53,3 +53,4 @@ export function isolationSummary(
   fixture: IsolatedFixture,
   parentEnv?: Record<string, string | undefined>,
 ): IsolationSummary;
+export function combinedExitCode(input: { childExitCode: number; cleanupFailed: boolean }): number;

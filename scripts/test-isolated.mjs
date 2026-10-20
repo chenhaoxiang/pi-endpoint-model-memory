@@ -3,7 +3,7 @@ import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  cleanupIsolatedFixture, createIsolatedFixture, isolatedEnv, isolationSummary,
+  cleanupIsolatedFixture, combinedExitCode, createIsolatedFixture, isolatedEnv, isolationSummary,
 } from "./test-isolation.mjs";
 
 const repoRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -69,6 +69,7 @@ try {
   }
 }
 
+const exitCode = combinedExitCode({ childExitCode: result.code, cleanupFailed: cleanupError !== undefined });
 const receipt = {
   label: fixtureLabel,
   command: [process.execPath, ...args],
@@ -83,11 +84,12 @@ const receipt = {
   homeInsideFixture: summary.homeInsideFixture,
   adcInsideFixture: summary.adcInsideFixture,
   sdk,
-  exitCode: result.code,
+  childExitCode: result.code,
+  exitCode,
   signal: result.signal,
 };
 await mkdir(join(repoRoot, "tmp", "verification"), { recursive: true });
 await writeFile(join(repoRoot, "tmp", "verification", "test-isolation-receipt.json"), `${JSON.stringify(receipt, null, 2)}\n`, "utf8");
-console.log(`[test-isolation] exit=${result.code} fixture-cleaned=${receipt.fixtureCleaned} receipt=tmp/verification/test-isolation-receipt.json`);
+console.log(`[test-isolation] exit=${exitCode} child-exit=${result.code} fixture-cleaned=${receipt.fixtureCleaned} receipt=tmp/verification/test-isolation-receipt.json`);
 
-process.exitCode = result.code;
+process.exitCode = exitCode;

@@ -106,3 +106,11 @@ export function isolationSummary(fixture, parentEnv = process.env) {
     fixture: relative(process.cwd(), fixture.directory),
   };
 }
+
+/**
+ * A failing test run keeps its own exit code; a failed fixture cleanup can never
+ * turn an otherwise green run into a false pass.
+ */
+export function combinedExitCode({ childExitCode, cleanupFailed }) {
+  return childExitCode !== 0 ? childExitCode : cleanupFailed ? 1 : 0;
+}

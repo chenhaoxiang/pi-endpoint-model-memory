@@ -5,7 +5,7 @@ import { join, resolve, sep } from "node:path";
 import { test } from "node:test";
 import {
   ISOLATION_ENV_MARKER, OWNER_KIND, allowedParentEnvKeys, cleanupIsolatedFixture,
-  createIsolatedFixture, isolatedEnv, isolationSummary, readFixtureOwner,
+  combinedExitCode, createIsolatedFixture, isolatedEnv, isolationSummary, readFixtureOwner,
 } from "../scripts/test-isolation.mjs";
 import { cleanup, fixture } from "./fixtures.js";
 
@@ -79,6 +79,13 @@ test("inherited credentials, Pi overrides and loader options are dropped", async
   } finally {
     await cleanup(root);
   }
+});
+
+test("a failed fixture cleanup can never report a green exit", () => {
+  assert.equal(combinedExitCode({ childExitCode: 0, cleanupFailed: true }), 1);
+  assert.equal(combinedExitCode({ childExitCode: 1, cleanupFailed: true }), 1);
+  assert.equal(combinedExitCode({ childExitCode: 2, cleanupFailed: false }), 2);
+  assert.equal(combinedExitCode({ childExitCode: 0, cleanupFailed: false }), 0);
 });
 
 test("owned fixtures are private, marked, and removed only when owned", async () => {
