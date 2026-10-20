@@ -18,7 +18,7 @@ Source changes must use an isolated branch/worktree. Never write the shared cano
 
 - `README.md` / `README.zh-CN.md`: default English and full Chinese installation, selection precedence, commands, and limitations.
 - `docs/releasing.md`: original-project SemVer, PR-only main, GitHub Releases, asset checksums and isolated installation verification.
-- `docs/architecture/endpoint-model-memory.md`: owner behavior contract, cross-provider restoration, state format, lifecycle decisions, and concurrency semantics.
+- `docs/architecture/endpoint-model-memory.md`: owner behavior contract, cross-provider restoration, state format, lifecycle decisions/concurrency, and session-local read-only restore-reason status (2026-10-20 successor).
 - `test/last-selection.test.ts` / `test/last-selection-store.test.ts`: cross-provider regression and persisted last-choice coverage.
 - `docs/verification/mvp.md`: original v0.1.0 local evidence snapshot and delivery boundaries.
 - `docs/verification/last-selected-provider.md`: 2026-10-14 cross-provider regression evidence and remaining delivery boundaries.

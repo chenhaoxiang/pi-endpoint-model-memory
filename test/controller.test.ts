@@ -227,6 +227,7 @@ test("status exposes the global choice even when the current endpoint is unsuppo
   });
   await h.command();
   assert.match(h.notices.at(-1)!.message, /Last selected: codex-local\/gpt-6\.1-sol/u);
+  assert.match(h.notices.at(-1)!.message, /Last restore decision: not-observed/u);
 });
 
 test("a valid global choice can restore even when the startup endpoint is unsupported", async () => {
@@ -257,6 +258,49 @@ test("a global choice matching the startup provider/model is a silent no-op", as
   assert.equal(h.ctx.model, h.original);
   assert.equal(h.state.selected, 0);
   assert.deepEqual(h.notices, []);
+});
+
+test("status explains the last restore attempt without a second restore, write or model request", async () => {
+  const cases: { reason: string; prepare: (h: ReturnType<typeof harness>) => void; launch?: Partial<LaunchPolicy>; start?: "startup" | "resume" | "fork" | "reload"; skipStart?: boolean }[] = [
+    { reason: "no-saved-choice", prepare: () => {} },
+    { reason: "restored", prepare: h => { h.seed(); } },
+    { reason: "already-selected", prepare: h => { h.seed(h.original.id); } },
+    { reason: "saved-choice-unavailable", prepare: h => { h.seed(); h.state.auth = false; } },
+    { reason: "restore-unavailable", prepare: h => { h.store.failRead = true; } },
+    { reason: "selection-refused", prepare: h => { h.seed(); h.state.selection = false; } },
+    { reason: "existing-conversation", prepare: h => { h.ctx.sessionManager.getBranch = () => [{ type: "message" }]; } },
+    { reason: "session-resume-fork-or-reload", prepare: () => {}, start: "resume" },
+    { reason: "disabled", prepare: h => { h.flags.set("endpoint-model-memory", "off"); } },
+    { reason: "not-observed", prepare: () => {}, skipStart: true },
+    { reason: "explicit-cli-selection", launch: { explicitSelection: true }, prepare: h => { h.seed(); } },
+    { reason: "startup-session-selection", launch: { sessionSelection: true }, prepare: h => { h.seed(); } },
+    { reason: "non-cli-host", launch: { cliHost: false }, prepare: () => {} },
+    { reason: "ephemeral", launch: { ephemeral: true }, prepare: () => {} },
+    { reason: "invalid-flag", prepare: h => { h.flags.set("endpoint-model-memory", "bad"); } },
+    { reason: "non-tui", prepare: h => { h.ctx.mode = "rpc"; } },
+    { reason: "current-model-unavailable", prepare: h => { h.ctx.model = undefined; } },
+  ];
+  for (const item of cases) {
+    const h = harness(item.launch); item.prepare(h); if (!item.skipStart) await h.start(item.start);
+    h.ctx.mode = "tui"; // Inspect a previous non-TUI decision without restoring a model.
+    const selected = h.state.selected, writes = h.store.writes;
+    await h.command("status");
+    assert.match(h.notices.at(-1)!.message, new RegExp(`Last restore decision: ${item.reason} `, "u"));
+    assert.equal(h.state.selected, selected); assert.equal(h.store.writes, writes);
+    assert.ok(!h.notices.at(-1)!.message.includes("private"));
+  }
+});
+
+test("diagnosis resets on reload and records a race without overriding newer selection", async () => {
+  const h = harness(); h.seed();
+  const read = h.store.read.bind(h.store);
+  h.store.read = async endpoint => { h.ctx.model = fakeModel("other", "new-choice"); return read(endpoint); };
+  await h.start(); await h.command();
+  assert.match(h.notices.at(-1)!.message, /Last restore decision: selection-changed-during-read/u);
+  assert.equal(h.state.selected, 0);
+  await h.start("reload"); await h.command();
+  assert.match(h.notices.at(-1)!.message, /Last restore decision: session-resume-fork-or-reload/u);
+  assert.equal(h.state.selected, 0);
 });
 
 for (const method of ["readLastSelection", "rememberSelection"]) {
