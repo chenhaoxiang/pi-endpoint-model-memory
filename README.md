@@ -20,7 +20,7 @@ If there is no last-choice record yet, existing v0.1.0 endpoint files retain the
 ### Selection precedence
 
 - Explicit `--model`, `--models`, or `--api-key`: keep the explicit choice.
-- Provider-only selection in compatible Pi versions: query only that provider’s startup endpoint, never another provider.
+- `--provider` with `--model`: Pi 1.3 rejects a bare `--provider` (`--provider requires --model`), and the pair is an explicit selection, so Pi’s choice is kept and no other provider is queried.
 - `--continue`, `--resume`, `--session`, `--fork`, or an existing conversation: retain the conversation model.
 - `/resume`, `/fork`, and `/reload`: do not apply automatic restoration.
 - New interactive sessions only: restore the last provider/model, validated against its remembered endpoint.
@@ -30,13 +30,13 @@ Only TUI `model_select` events are remembered, not startup defaults, automatic m
 
 ## Install
 
-The cross-provider behavior was introduced in `v0.2.0`. Version `v0.2.1` also packages the session-local restore/skip reason shown by `status`; model-selection and storage behavior are unchanged. Published `v0.1.0` keeps endpoint-only restoration. Install the pinned release:
+The `0.3.0` source line preserves cross-provider restoration and session-local status diagnostics while raising the Pi baseline to `1.3.0-fork.1`. Pi 0.99.x is no longer a supported development or runtime target. Verify the matching published tag and assets on GitHub Releases before installing the pinned version:
 
 ```bash
-pi install git:github.com/chenhaoxiang/pi-endpoint-model-memory@v0.2.1
+pi install git:github.com/chenhaoxiang/pi-endpoint-model-memory@v0.3.0
 ```
 
-For the moving maintained branch, use `@main`. To try the current checkout without installing:
+For source development, the moving maintained branch is `@main`; stable installations use verified fixed releases instead. Historical tags remain available for rollback, not as a current 0.99.x support promise. To try the current checkout without installing:
 
 ```bash
 pi -e ./src/index.ts
@@ -46,7 +46,7 @@ Restart Pi after installation, or `/reload` in an existing session. Reload itsel
 
 ## Releases and maintenance
 
-Current source release: **0.2.1**. This original project uses ordinary SemVer and `v<version>` tags; it does not invent a community version or an `upstream-main` branch. `main` is the maintained default and release branch, updated through pull requests.
+Current source version: **0.3.0**. Published artifacts and their actual availability are listed in GitHub Releases. This original project uses ordinary SemVer and `v<version>` tags; it does not invent a community version or an `upstream-main` branch. `main` is the maintained default and release branch, updated through pull requests.
 
 [GitHub Releases](https://github.com/chenhaoxiang/pi-endpoint-model-memory/releases) provide an installable tarball, `release-manifest.json`, and `SHA256SUMS`. Verify checksums before installing downloaded assets. See [release maintenance](docs/releasing.md) for the per-version publishing and artifact installation process. A GitHub release does not imply npm publication or hot reload of active sessions.
 
@@ -71,7 +71,7 @@ Records contain only schema version, endpoint digest, provider, model ID, and up
 
 ## Requirements
 
-- Pi 0.99.1 or later.
+- Pi `1.3.0-fork.1` or later, from the maintained `chenhaoxiang/pi` fork. Pi 0.99.x is no longer developed against or supported.
 - Node.js 22.19 or later, as required by Pi.
 - Only Pi’s public extension API is used.
 
@@ -82,6 +82,10 @@ npm ci --ignore-scripts
 npm run check
 npm pack --dry-run --json
 ```
+
+`devDependencies` and root `overrides` pin the immutable public release assets of `chenhaoxiang/pi` `v1.3.0-fork.1`; the lockfile records their URLs and integrity hashes, so no local absolute path is needed. The maintained SDK tarball ships no `npm-shrinkwrap.json`, and the fork sub-packages are not published to npm, so the root `overrides` resolve them from the same release. npm applies root `overrides` only in this checkout; they do not constrain anyone installing the extension.
+
+`npm test`, and therefore `npm run check`, starts through `scripts/test-isolated.mjs`. Before any test process exists it creates an owned fixture under `tmp/test-isolation/`, points `HOME`, `PI_CODING_AGENT_DIR`, `XDG_CONFIG_HOME`/`XDG_CACHE_HOME`/`XDG_DATA_HOME`/`XDG_STATE_HOME` and `TMPDIR` there, and forwards only `PATH` plus locale and platform system keys. Inherited credentials, Pi overrides, `NODE_OPTIONS` and `npm_*` therefore never reach a test, and Google ADC discovery resolves inside the fixture. The wrapper logs only forwarded key names and fixed labels, writes `tmp/verification/test-isolation-receipt.json` (command, SDK versions, `homeIsRealHome: false`, cleanup result) and removes the fixture only when its ownership marker matches. `test/isolation.test.ts` fails if the suite is started outside this envelope, so run `npm test` rather than a bare test runner.
 
 Tests use synthetic models, temporary directories, and provider-free state. They do not send model requests or read production credentials.
 

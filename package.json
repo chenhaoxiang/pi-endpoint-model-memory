@@ -1,6 +1,6 @@
 {
   "name": "pi-endpoint-model-memory",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "type": "module",
   "description": "Restore the last selected Pi provider and model with endpoint validation and independent endpoint history.",
   "license": "MIT",
@@ -34,19 +34,27 @@
     ]
   },
   "scripts": {
-    "test": "tsx --test test/*.test.ts",
+    "test": "node scripts/test-isolated.mjs",
     "typecheck": "tsc --noEmit",
     "build": "tsc -p tsconfig.build.json",
     "audit:runtime": "npm audit --omit=dev --audit-level=high",
     "check": "npm run typecheck && npm test && npm run build"
   },
   "peerDependencies": {
-    "@earendil-works/pi-coding-agent": "*"
+    "@earendil-works/pi-coding-agent": ">=1.3.0-fork.1"
   },
   "devDependencies": {
-    "@earendil-works/pi-coding-agent": "0.99.1",
+    "@earendil-works/pi-coding-agent": "https://github.com/chenhaoxiang/pi/releases/download/v1.3.0-fork.1/earendil-works-pi-coding-agent-1.3.0-fork.1.tgz",
     "@types/node": "22.19.19",
     "tsx": "4.23.15",
     "typescript": "7.0.2"
+  },
+  "overrides": {
+    "@earendil-works/pi-agent-core": "https://github.com/chenhaoxiang/pi/releases/download/v1.3.0-fork.1/earendil-works-pi-agent-core-1.3.0-fork.1.tgz",
+    "@earendil-works/pi-ai": "https://github.com/chenhaoxiang/pi/releases/download/v1.3.0-fork.1/earendil-works-pi-ai-1.3.0-fork.1.tgz",
+    "@earendil-works/pi-codemode": "https://github.com/chenhaoxiang/pi/releases/download/v1.3.0-fork.1/earendil-works-pi-codemode-1.3.0-fork.1.tgz",
+    "@earendil-works/pi-mcp": "https://github.com/chenhaoxiang/pi/releases/download/v1.3.0-fork.1/earendil-works-pi-mcp-1.3.0-fork.1.tgz",
+    "@earendil-works/pi-telemetry": "https://github.com/chenhaoxiang/pi/releases/download/v1.3.0-fork.1/earendil-works-pi-telemetry-1.3.0-fork.1.tgz",
+    "@earendil-works/pi-tui": "https://github.com/chenhaoxiang/pi/releases/download/v1.3.0-fork.1/earendil-works-pi-tui-1.3.0-fork.1.tgz"
   }
 }

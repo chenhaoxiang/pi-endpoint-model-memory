@@ -30,25 +30,25 @@
 - 执行 `/resume`、`/fork` 或 `/reload`；
 - 非 TUI 运行。
 
-只有全新的交互式会话，才会恢复最后选择的完整渠道和模型。兼容版本中如果仅显式指定 `--provider`，则只恢复该启动端点的模型，不切换到其他渠道。Pi 原生 `Ctrl+S` 仍然可以保存全局默认模型；本扩展不会改写 `settings.json`。
+只有全新的交互式会话，才会恢复最后选择的完整渠道和模型。Pi 1.3 要求 `--provider` 与 `--model` 一起使用（单独的 `--provider` 会被拒绝），此时属于显式选择，保留 Pi 的选择，不执行记忆恢复，也不会查询其他渠道。Pi 原生 `Ctrl+S` 仍然可以保存全局默认模型；本扩展不会改写 `settings.json`。
 
 扩展只记录 TUI 中发生的 `model_select` 选择，不记录启动时的默认模型、扩展自己的自动恢复、会话恢复、reload 或非 TUI 运行。Pi 的公开 hook 无法区分 `/model` 与其他扩展调用 `setModel()`，因此其他扩展造成的模型切换也可能被记录为一次选择。
 
 ## 发布与维护
 
-当前源码版本为 **0.2.1**。本项目是原创项目，使用普通 SemVer 和 `v<版本>` tag，不虚构社区上游或 `upstream-main` 分支。`main` 是维护与发布主线，通过 PR 更新。
+当前源码版本为 **0.3.0**；实际已发布的版本与制品以 GitHub Releases 为准。本项目是原创项目，使用普通 SemVer 和 `v<版本>` tag，不虚构社区上游或 `upstream-main` 分支。`main` 是维护与发布主线，通过 PR 更新。
 
 [GitHub Releases](https://github.com/chenhaoxiang/pi-endpoint-model-memory/releases) 提供可安装包、`release-manifest.json` 来源清单和 `SHA256SUMS`；下载后先校验，再解压到永久目录安装。每版本发布流程见[维护说明](docs/releasing.md)。GitHub 发布不等于 npm 发布，也不会自动重载运行中的会话。
 
 ## 安装
 
-跨渠道恢复从 `v0.2.0` 开始提供；`v0.2.1` 进一步打包了 `status` 中的会话内恢复或跳过原因，不改变模型选择和存储行为。已发布的 `v0.1.0` 仍只按端点恢复。固定新版本安装：
+`0.3.0` 保留跨渠道恢复和会话内状态诊断，将 Pi 基线提升到 `1.3.0-fork.1`。不再把 Pi 0.99.x 作为开发或运行支持目标。安装前先在 GitHub Releases 核验对应固定 tag 和制品：
 
 ```bash
-pi install git:github.com/chenhaoxiang/pi-endpoint-model-memory@v0.2.1
+pi install git:github.com/chenhaoxiang/pi-endpoint-model-memory@v0.3.0
 ```
 
-可以在当前候选仓库临时加载修复，不修改全局安装：
+可以临时加载当前源码，不修改全局安装。`@main` 用于源码开发，稳定安装应选择已核验的固定发布版；历史 tag 只保留回退用途，不代表继续维护 0.99.x：
 
 ```bash
 pi -e ./src/index.ts
@@ -101,17 +101,21 @@ pi --endpoint-model-memory off
 
 ## 要求
 
-- Pi 0.99.1 或更高版本；
+- Pi `1.3.0-fork.1` 或更高版本（维护中的 `chenhaoxiang/pi` fork）。Pi 0.99.x 不再作为开发或支持基线；
 - Node.js 22.19 或更高版本；
 - 仅使用 Pi 公共 Extension API。
 
 ## 开发与验证
 
 ```bash
-npm install --ignore-scripts
+npm ci --ignore-scripts
 npm run check
 npm pack --dry-run --json
 ```
+
+`devDependencies` 和根 `overrides` 固定引用 `chenhaoxiang/pi` `v1.3.0-fork.1` 的不可变公开发布制品；锁文件记录其 URL 与完整性哈希，因此不需要本机绝对路径。维护版 SDK 制品不含 `npm-shrinkwrap.json`，且 fork 子包未发布到 npm，所以由根 `overrides` 从同一 Release 解析。npm 只在当前仓库应用根 `overrides`，不会约束安装本扩展的用户。
+
+`npm test`（以及包含它的 `npm run check`）会经由 `scripts/test-isolated.mjs` 启动。在任何测试进程出现之前，它先在 `tmp/test-isolation/` 下创建自有 fixture，把 `HOME`、`PI_CODING_AGENT_DIR`、`XDG_CONFIG_HOME`/`XDG_CACHE_HOME`/`XDG_DATA_HOME`/`XDG_STATE_HOME` 和 `TMPDIR` 指向该目录，并且只传递 `PATH`、区域设置和平台系统键。因此继承的凭据、Pi 覆盖项、`NODE_OPTIONS` 和 `npm_*` 都不会进入测试，Google ADC 探测也只落在 fixture 内。包装器只输出传递的键名与固定标签，写出 `tmp/verification/test-isolation-receipt.json`（命令、SDK 版本、`homeIsRealHome: false`、清理结果），且仅当归属标记匹配时才删除 fixture。若绕过该包装器直接运行测试，`test/isolation.test.ts` 会失败，请使用 `npm test`。
 
 测试使用合成模型、临时目录和 provider-free 状态，不发送真实模型请求，也不读取生产凭据。
 
