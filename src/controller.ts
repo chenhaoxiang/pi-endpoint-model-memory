@@ -14,6 +14,10 @@ export interface ControllerOptions {
 export function registerModelMemory(pi: ExtensionAPI, options: ControllerOptions): void {
   const { store, launch } = options;
   let restoring = false;
+  // Session-local diagnosis only: never persisted, added to model context or used
+  // to select a model. Old sessions without an observed attempt stay unknown.
+  let restoreReason = "not-observed";
+  const diagnosis = () => `Last restore decision: ${restoreReason} (session-local observation; not execution authentication).`;
 
   pi.registerFlag("endpoint-model-memory", {
     description: "Endpoint model memory: on (default) or off",
@@ -28,10 +32,17 @@ export function registerModelMemory(pi: ExtensionAPI, options: ControllerOptions
     if (ctx.mode === "tui" && flag !== "on" && flag !== "off") {
       ctx.ui.notify("Endpoint model memory: expected 'on' or 'off'; automatic behavior disabled.", "warning");
     }
-    if (!enabled(ctx) || !["startup", "new"].includes(event.reason) ||
-        launch.explicitSelection || (event.reason === "startup" && launch.sessionSelection) || !ctx.model) return;
+    if (!enabled(ctx)) {
+      restoreReason = ctx.mode !== "tui" ? "non-tui" : !launch.cliHost ? "non-cli-host" : launch.ephemeral ? "ephemeral" : flag === "off" ? "disabled" : "invalid-flag";
+      return;
+    }
+    if (!["startup", "new"].includes(event.reason)) { restoreReason = "session-resume-fork-or-reload"; return; }
+    if (launch.explicitSelection) { restoreReason = "explicit-cli-selection"; return; }
+    if (event.reason === "startup" && launch.sessionSelection) { restoreReason = "startup-session-selection"; return; }
+    if (!ctx.model) { restoreReason = "current-model-unavailable"; return; }
     if (ctx.sessionManager.getBranch().some((entry) =>
-      ["message", "custom_message", "compaction", "branch_summary"].includes(entry.type))) return;
+      ["message", "custom_message", "compaction", "branch_summary"].includes(entry.type))) { restoreReason = "existing-conversation"; return; }
+    restoreReason = "checking-saved-choice";
     const original = { provider: ctx.model.provider, id: ctx.model.id };
     const startupEndpoint = endpointFor(ctx.model);
     try {
@@ -40,34 +51,38 @@ export function registerModelMemory(pi: ExtensionAPI, options: ControllerOptions
       const last = !launch.explicitProvider && store.readLastSelection && store.rememberSelection
         ? await store.readLastSelection() : undefined;
       const remembered = last ?? (startupEndpoint ? await store.read(startupEndpoint) : undefined);
-      if (!remembered) return;
+      if (!remembered) { restoreReason = "no-saved-choice"; return; }
       const candidate = ctx.modelRegistry.find(remembered.provider, remembered.modelId);
       const allowed = ctx.scopedModels.length === 0 || ctx.scopedModels.some((item) =>
         item.model.provider === candidate?.provider && item.model.id === candidate?.id);
       if (!candidate || endpointFor(candidate)?.key !== remembered.endpointKey || !allowed ||
           !ctx.modelRegistry.hasConfiguredAuth(candidate)) {
         // Never fall back to an older provider when the last choice is unusable.
+        restoreReason = "saved-choice-unavailable";
         ctx.ui.notify("Endpoint model memory: saved model is unavailable for its endpoint/scope; keeping Pi's selection.", "warning");
         return;
       }
-      if (candidate.provider === original.provider && candidate.id === original.id) return;
+      if (candidate.provider === original.provider && candidate.id === original.id) { restoreReason = "already-selected"; return; }
       // Guard a concurrent selection while disk state was being read.
       if (ctx.model?.provider !== original.provider || ctx.model.id !== original.id ||
-          endpointFor(ctx.model)?.key !== startupEndpoint?.key) return;
+          endpointFor(ctx.model)?.key !== startupEndpoint?.key) { restoreReason = "selection-changed-during-read"; return; }
       const thinking = pi.getThinkingLevel();
       restoring = true;
       try {
         const selected = await pi.setModel(candidate);
         if (!selected) {
+          restoreReason = "selection-refused";
           ctx.ui.notify("Endpoint model memory: model selection failed; keeping Pi's selection.", "warning");
           return;
         }
         if (launch.explicitThinking) pi.setThinkingLevel(thinking);
+        restoreReason = "restored";
         ctx.ui.notify(`Endpoint model memory: restored ${candidate.provider}/${candidate.id}.`, "info");
       } finally {
         restoring = false;
       }
     } catch {
+      restoreReason = "restore-unavailable";
       ctx.ui.notify("Endpoint model memory: could not restore saved state; keeping Pi's selection.", "warning");
     }
   });
@@ -111,7 +126,7 @@ export function registerModelMemory(pi: ExtensionAPI, options: ControllerOptions
           ctx.ui.notify("Endpoint model memory: the current model has no supported configured endpoint.", "warning");
         } else {
           const state = enabled(ctx) ? "enabled" : "disabled";
-          ctx.ui.notify(`Endpoint model memory (${state}): current model has no supported configured endpoint.\n${await latestSelection()}`, "info");
+          ctx.ui.notify(`Endpoint model memory (${state}): current model has no supported configured endpoint.\n${await latestSelection()}\n${diagnosis()}`, "info");
         }
         return;
       }
@@ -130,9 +145,9 @@ export function registerModelMemory(pi: ExtensionAPI, options: ControllerOptions
         const state = enabled(ctx) ? "enabled" : "disabled";
         const current = record ? `Saved: ${record.modelId}\nUpdated: ${record.updatedAt}` : "No saved model for this endpoint.";
         const latest = await latestSelection();
-        ctx.ui.notify(`Endpoint model memory (${state}): ${endpoint.provider} [${endpoint.key.slice(0, 12)}]\n${current}\n${latest}`, "info");
+        ctx.ui.notify(`Endpoint model memory (${state}): ${endpoint.provider} [${endpoint.key.slice(0, 12)}]\n${current}\n${latest}\n${diagnosis()}`, "info");
       } catch {
-        ctx.ui.notify("Endpoint model memory: could not access saved state.", "warning");
+        ctx.ui.notify(`Endpoint model memory: could not access saved state.\n${diagnosis()}`, "warning");
       }
     },
   });
