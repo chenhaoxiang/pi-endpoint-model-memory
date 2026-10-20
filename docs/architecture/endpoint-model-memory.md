@@ -6,7 +6,7 @@ status: active
 truth_mode: maintained
 created: 2026-09-30
 verified: 2026-10-14
-updated: 2026-10-14
+updated: 2026-10-20
 owner: chx
 ssot: true
 ---
@@ -62,6 +62,8 @@ Default directory: `<Pi agentDir>/endpoint-model-memory/`. Honor Pi's `getAgentD
 
 `/endpoint-model-memory` (or `status`) shows the current provider, a short digest, its remembered model/time, and the globally last selected provider/model/time. A corrupt/unreadable pointer is shown as unavailable without hiding the valid endpoint record. `forget` asks for confirmation, removes the current endpoint's record, and clears a matching last-choice record without changing the active model or defaults; corrupt pointer bytes are preserved with a warning. `--endpoint-model-memory off` disables automatic behavior for an invocation; it does not remove history.
 
+Warnings contain fixed messages, never arbitrary exceptions/JSON/URLs. Restore only a currently registered, saved-key-matching, scope-allowed model with configured authentication. Preserve Pi's original selection if checks fail. Automatic restoration is visible through a notification, not a hidden model-context message.
+
 ### 2026-10-20 read-only diagnosis successor
 
 The existing status command additionally reports the last restore decision observed by
@@ -74,8 +76,6 @@ so resume/fork/reload does not inherit an earlier success label. Status does not
 restoration, call a provider, resolve auth or change the active model. Its existing
 read-only history inspection remains unchanged. Source merge, release/installation and
 old-session loading remain separate; this does not activate a new installed version.
-
-Warnings contain fixed messages, never arbitrary exceptions/JSON/URLs. Restore only a currently registered, saved-key-matching, scope-allowed model with configured authentication. Preserve Pi's original selection if checks fail. Automatic restoration is visible through a notification, not a hidden model-context message.
 
 ## Acceptance
 

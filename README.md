@@ -57,7 +57,7 @@ Current source release: **0.2.0**. This original project uses ordinary SemVer an
 /endpoint-model-memory forget
 ```
 
-`status` displays the current endpoint record and the globally last selected provider/model. `forget` deletes only that endpoint’s memory and clears the last-choice record if it points to that endpoint, without changing the active model or global default. A corrupt or unreadable last-choice record does not block status or deletion of a valid endpoint record; its bytes are preserved and a sanitized warning reports the incomplete global cleanup. Disable automatic behavior for one invocation:
+`status` displays the current endpoint record, globally last selected provider/model, and last observed restore/skip reason (fixed codes, session-local only). `forget` deletes only that endpoint’s memory and clears the last-choice record if it points to that endpoint, without changing the active model or global default. A corrupt or unreadable last-choice record does not block status or deletion of a valid endpoint record; its bytes are preserved and a sanitized warning reports the incomplete global cleanup. Disable automatic behavior for one invocation:
 
 ```bash
 pi --endpoint-model-memory off
