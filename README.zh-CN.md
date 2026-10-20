@@ -36,19 +36,19 @@
 
 ## 发布与维护
 
-当前源码版本为 **0.3.0**，尚未打 tag 或发布；最近一次已发布版本是 **0.2.1**。本项目是原创项目，使用普通 SemVer 和 `v<版本>` tag，不虚构社区上游或 `upstream-main` 分支。`main` 是维护与发布主线，通过 PR 更新。
+当前源码版本为 **0.3.0**；实际已发布的版本与制品以 GitHub Releases 为准。本项目是原创项目，使用普通 SemVer 和 `v<版本>` tag，不虚构社区上游或 `upstream-main` 分支。`main` 是维护与发布主线，通过 PR 更新。
 
 [GitHub Releases](https://github.com/chenhaoxiang/pi-endpoint-model-memory/releases) 提供可安装包、`release-manifest.json` 来源清单和 `SHA256SUMS`；下载后先校验，再解压到永久目录安装。每版本发布流程见[维护说明](docs/releasing.md)。GitHub 发布不等于 npm 发布，也不会自动重载运行中的会话。
 
 ## 安装
 
-跨渠道恢复从 `v0.2.0` 开始提供；`v0.2.1` 进一步打包了 `status` 中的会话内恢复或跳过原因，不改变模型选择和存储行为。已发布的 `v0.1.0` 仍只按端点恢复。`0.3.0` 保持上述行为不变，只把 Pi 基线提升到 `1.3.0-fork.1`。固定新版本安装：
+`0.3.0` 保留跨渠道恢复和会话内状态诊断，将 Pi 基线提升到 `1.3.0-fork.1`。不再把 Pi 0.99.x 作为开发或运行支持目标。安装前先在 GitHub Releases 核验对应固定 tag 和制品：
 
 ```bash
-pi install git:github.com/chenhaoxiang/pi-endpoint-model-memory@v0.2.1
+pi install git:github.com/chenhaoxiang/pi-endpoint-model-memory@v0.3.0
 ```
 
-可以在当前候选仓库临时加载修复，不修改全局安装（维护中的 `@main` 现已要求 Pi `1.3.0-fork.1` 或更新版本，下一个源码版本为 `0.3.0`；`v0.2.1` 是最后一个支持 Pi 0.99.1 的版本）：
+可以临时加载当前源码，不修改全局安装。`@main` 用于源码开发，稳定安装应选择已核验的固定发布版；历史 tag 只保留回退用途，不代表继续维护 0.99.x：
 
 ```bash
 pi -e ./src/index.ts
