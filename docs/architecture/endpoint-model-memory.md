@@ -15,13 +15,13 @@ ssot: true
 
 ## Scope
 
-Pi 0.99.1+ standalone extension. On 2026-10-14 the owner approved restoring the last complete provider/model selection across channels, replacing the v0.1 endpoint-only restoration rule. This document describes that source contract; it does not approve a GitHub merge, publication, or machine-wide installation. The project uses this single-owner spec rather than an additional OpenSpec workflow.
+Pi 1.3.0-fork.1+ standalone extension (the maintained `chenhaoxiang/pi` fork; Pi 0.99.x is not a supported baseline). On 2026-10-14 the owner approved restoring the last complete provider/model selection across channels, replacing the v0.1 endpoint-only restoration rule. This document describes that source contract; it does not approve a GitHub merge, publication, or machine-wide installation. The project uses this single-owner spec rather than an additional OpenSpec workflow.
 
 On a **fresh interactive TUI session**, restore the last TUI-selected provider/model, even when it differs from Pi's ordinary default provider. Validate the selected model against the exact saved provider, configured catalog base URL, and API type before switching. Endpoint-specific records remain independent history, not alternative-provider fallback candidates. The restoration does not rewrite Pi settings.
 
 ## Selection precedence
 
-1. Explicit `--model`, `--models`, or `--api-key` keeps the CLI selection. Arguments after `--` and values supplied to other flags are not interpreted as model flags. In compatible older Pi versions, provider-only `--provider` constrains restoration to the startup endpoint; Pi 1.1 requires `--provider` to accompany `--model`.
+1. Explicit `--model`, `--models`, or `--api-key` keeps the CLI selection. Arguments after `--` and values supplied to other flags are not interpreted as model flags. A `--provider` selection constrains restoration to the startup endpoint and never queries another provider; Pi 1.3 documents `--provider` as requiring `--model`.
 2. Startup resume/continue/session/fork options and conversations already containing message/custom-message/compaction/branch-summary entries keep the session's own selection.
 3. `/resume`, `/fork`, and `/reload` never apply memory restoration.
 4. Ordinary fresh startup and `/new` can restore the last complete choice. A `--thinking` selection is preserved when changing the model; other reasoning defaults are handled by Pi.

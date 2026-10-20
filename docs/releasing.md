@@ -16,6 +16,10 @@ Applies to the independent original project chenhaoxiang/pi-endpoint-model-memor
 
 `main` is the maintained default/release branch and accepts changes through pull requests. Use ordinary SemVer and `v<version>` tags. No community base, fork suffix, or community mirror is claimed. Retain all historical branches and previous releases. Never reuse a published tag or replace its assets.
 
+## SDK baseline
+
+Development and release validation target the maintained `chenhaoxiang/pi` fork at `1.3.0-fork.1` or newer; Pi 0.99.x is no longer supported. `package.json` pins the public immutable coding-agent release tarball in `devDependencies`, and root `overrides` resolve its fork sub-packages (which are not published to npm) from the same `v1.3.0-fork.1` release assets. The lockfile records those URLs with integrity hashes, so `npm ci --ignore-scripts` is reproducible without any local path or vendored SDK. That tarball ships no `npm-shrinkwrap.json`. Check `npm audit` for both the development and `--omit=dev` runtime scopes; root `overrides` apply only to this checkout and do not constrain consumers of the installed package.
+
 ## Publish every version
 
 1. Fetch origin/main and create an isolated worktree from its exact latest commit. Preserve unrelated dirty work.
