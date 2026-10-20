@@ -1,6 +1,6 @@
 {
   "name": "pi-endpoint-model-memory",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "type": "module",
   "description": "Restore the last selected Pi provider and model with endpoint validation and independent endpoint history.",
   "license": "MIT",

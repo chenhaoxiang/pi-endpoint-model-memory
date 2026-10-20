@@ -30,10 +30,10 @@ Only TUI `model_select` events are remembered, not startup defaults, automatic m
 
 ## Install
 
-The cross-provider behavior above is packaged as `v0.2.0`. Published `v0.1.0` keeps endpoint-only restoration and does **not** include this change. Install the pinned release:
+The cross-provider behavior was introduced in `v0.2.0`. Version `v0.2.1` also packages the session-local restore/skip reason shown by `status`; model-selection and storage behavior are unchanged. Published `v0.1.0` keeps endpoint-only restoration. Install the pinned release:
 
 ```bash
-pi install git:github.com/chenhaoxiang/pi-endpoint-model-memory@v0.2.0
+pi install git:github.com/chenhaoxiang/pi-endpoint-model-memory@v0.2.1
 ```
 
 For the moving maintained branch, use `@main`. To try the current checkout without installing:
@@ -46,7 +46,7 @@ Restart Pi after installation, or `/reload` in an existing session. Reload itsel
 
 ## Releases and maintenance
 
-Current source release: **0.2.0**. This original project uses ordinary SemVer and `v<version>` tags; it does not invent a community version or an `upstream-main` branch. `main` is the maintained default and release branch, updated through pull requests.
+Current source release: **0.2.1**. This original project uses ordinary SemVer and `v<version>` tags; it does not invent a community version or an `upstream-main` branch. `main` is the maintained default and release branch, updated through pull requests.
 
 [GitHub Releases](https://github.com/chenhaoxiang/pi-endpoint-model-memory/releases) provide an installable tarball, `release-manifest.json`, and `SHA256SUMS`. Verify checksums before installing downloaded assets. See [release maintenance](docs/releasing.md) for the per-version publishing and artifact installation process. A GitHub release does not imply npm publication or hot reload of active sessions.
 

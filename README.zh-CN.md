@@ -36,16 +36,16 @@
 
 ## 发布与维护
 
-当前源码版本为 **0.2.0**。本项目是原创项目，使用普通 SemVer 和 `v<版本>` tag，不虚构社区上游或 `upstream-main` 分支。`main` 是维护与发布主线，通过 PR 更新。
+当前源码版本为 **0.2.1**。本项目是原创项目，使用普通 SemVer 和 `v<版本>` tag，不虚构社区上游或 `upstream-main` 分支。`main` 是维护与发布主线，通过 PR 更新。
 
 [GitHub Releases](https://github.com/chenhaoxiang/pi-endpoint-model-memory/releases) 提供可安装包、`release-manifest.json` 来源清单和 `SHA256SUMS`；下载后先校验，再解压到永久目录安装。每版本发布流程见[维护说明](docs/releasing.md)。GitHub 发布不等于 npm 发布，也不会自动重载运行中的会话。
 
 ## 安装
 
-上面的跨渠道恢复属于 `v0.2.0` 源码，已发布的 `v0.1.0` 仍按端点恢复，不包含这次修复。固定新版本安装：
+跨渠道恢复从 `v0.2.0` 开始提供；`v0.2.1` 进一步打包了 `status` 中的会话内恢复或跳过原因，不改变模型选择和存储行为。已发布的 `v0.1.0` 仍只按端点恢复。固定新版本安装：
 
 ```bash
-pi install git:github.com/chenhaoxiang/pi-endpoint-model-memory@v0.2.0
+pi install git:github.com/chenhaoxiang/pi-endpoint-model-memory@v0.2.1
 ```
 
 可以在当前候选仓库临时加载修复，不修改全局安装：
