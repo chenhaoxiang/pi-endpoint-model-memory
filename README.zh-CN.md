@@ -30,7 +30,7 @@
 - 执行 `/resume`、`/fork` 或 `/reload`；
 - 非 TUI 运行。
 
-只有全新的交互式会话，才会恢复最后选择的完整渠道和模型。仅显式指定 `--provider` 时，只恢复该启动端点的模型，不切换到其他渠道。Pi 原生 `Ctrl+S` 仍然可以保存全局默认模型；本扩展不会改写 `settings.json`。
+只有全新的交互式会话，才会恢复最后选择的完整渠道和模型。Pi 1.3 要求 `--provider` 与 `--model` 一起使用（单独的 `--provider` 会被拒绝），此时属于显式选择，保留 Pi 的选择，不执行记忆恢复，也不会查询其他渠道。Pi 原生 `Ctrl+S` 仍然可以保存全局默认模型；本扩展不会改写 `settings.json`。
 
 扩展只记录 TUI 中发生的 `model_select` 选择，不记录启动时的默认模型、扩展自己的自动恢复、会话恢复、reload 或非 TUI 运行。Pi 的公开 hook 无法区分 `/model` 与其他扩展调用 `setModel()`，因此其他扩展造成的模型切换也可能被记录为一次选择。
 
@@ -114,6 +114,8 @@ npm pack --dry-run --json
 ```
 
 `devDependencies` 和根 `overrides` 固定引用 `chenhaoxiang/pi` `v1.3.0-fork.1` 的不可变公开发布制品；锁文件记录其 URL 与完整性哈希，因此不需要本机绝对路径。维护版 SDK 制品不含 `npm-shrinkwrap.json`，且 fork 子包未发布到 npm，所以由根 `overrides` 从同一 Release 解析。npm 只在当前仓库应用根 `overrides`，不会约束安装本扩展的用户。
+
+`npm test`（以及包含它的 `npm run check`）会经由 `scripts/test-isolated.mjs` 启动。在任何测试进程出现之前，它先在 `tmp/test-isolation/` 下创建自有 fixture，把 `HOME`、`PI_CODING_AGENT_DIR`、`XDG_CONFIG_HOME`/`XDG_CACHE_HOME`/`XDG_DATA_HOME`/`XDG_STATE_HOME` 和 `TMPDIR` 指向该目录，并且只传递 `PATH`、区域设置和平台系统键。因此继承的凭据、Pi 覆盖项、`NODE_OPTIONS` 和 `npm_*` 都不会进入测试，Google ADC 探测也只落在 fixture 内。包装器只输出传递的键名与固定标签，写出 `tmp/verification/test-isolation-receipt.json`（命令、SDK 版本、`homeIsRealHome: false`、清理结果），且仅当归属标记匹配时才删除 fixture。若绕过该包装器直接运行测试，`test/isolation.test.ts` 会失败，请使用 `npm test`。
 
 测试使用合成模型、临时目录和 provider-free 状态，不发送真实模型请求，也不读取生产凭据。
 

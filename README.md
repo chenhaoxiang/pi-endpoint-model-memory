@@ -20,7 +20,7 @@ If there is no last-choice record yet, existing v0.1.0 endpoint files retain the
 ### Selection precedence
 
 - Explicit `--model`, `--models`, or `--api-key`: keep the explicit choice.
-- Provider-only `--provider`: query only that provider’s startup endpoint, never another provider.
+- `--provider` with `--model`: Pi 1.3 rejects a bare `--provider` (`--provider requires --model`), and the pair is an explicit selection, so Pi’s choice is kept and no other provider is queried.
 - `--continue`, `--resume`, `--session`, `--fork`, or an existing conversation: retain the conversation model.
 - `/resume`, `/fork`, and `/reload`: do not apply automatic restoration.
 - New interactive sessions only: restore the last provider/model, validated against its remembered endpoint.
@@ -84,6 +84,8 @@ npm pack --dry-run --json
 ```
 
 `devDependencies` and root `overrides` pin the immutable public release assets of `chenhaoxiang/pi` `v1.3.0-fork.1`; the lockfile records their URLs and integrity hashes, so no local absolute path is needed. The maintained SDK tarball ships no `npm-shrinkwrap.json`, and the fork sub-packages are not published to npm, so the root `overrides` resolve them from the same release. npm applies root `overrides` only in this checkout; they do not constrain anyone installing the extension.
+
+`npm test`, and therefore `npm run check`, starts through `scripts/test-isolated.mjs`. Before any test process exists it creates an owned fixture under `tmp/test-isolation/`, points `HOME`, `PI_CODING_AGENT_DIR`, `XDG_CONFIG_HOME`/`XDG_CACHE_HOME`/`XDG_DATA_HOME`/`XDG_STATE_HOME` and `TMPDIR` there, and forwards only `PATH` plus locale and platform system keys. Inherited credentials, Pi overrides, `NODE_OPTIONS` and `npm_*` therefore never reach a test, and Google ADC discovery resolves inside the fixture. The wrapper logs only forwarded key names and fixed labels, writes `tmp/verification/test-isolation-receipt.json` (command, SDK versions, `homeIsRealHome: false`, cleanup result) and removes the fixture only when its ownership marker matches. `test/isolation.test.ts` fails if the suite is started outside this envelope, so run `npm test` rather than a bare test runner.
 
 Tests use synthetic models, temporary directories, and provider-free state. They do not send model requests or read production credentials.
 

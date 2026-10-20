@@ -24,7 +24,7 @@ Development and release validation target the maintained `chenhaoxiang/pi` fork 
 
 1. Fetch origin/main and create an isolated worktree from its exact latest commit. Preserve unrelated dirty work.
 2. Update package version, lockfile version metadata when changed, and both README files. English README is the default; the Chinese document links back.
-3. Run `npm ci --ignore-scripts`, `npm run check`, and package inspection. Tests use only synthetic models and temporary agent directories.
+3. Run `npm ci --ignore-scripts`, `npm run check`, and package inspection. `npm test` must run through `scripts/test-isolated.mjs`; keep the resulting `tmp/verification/test-isolation-receipt.json` with the release evidence. Tests use only synthetic models and temporary agent directories.
 4. Review the exact diff and merge the PR normally; verify remote main contains the validated head.
 5. Build the package at that exact main SHA using `npm pack --ignore-scripts --pack-destination tmp/release`. Extract the tarball and load it through isolated Pi RPC with a synthetic loopback model and no prompts. Include both README files and this runbook.
 6. Generate `release-manifest.json` with repository, version, exact source commit, tarball filename and SHA-256; community fields are null. Generate `SHA256SUMS` for the tarball and manifest.

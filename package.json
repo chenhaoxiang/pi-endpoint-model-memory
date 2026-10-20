@@ -34,7 +34,7 @@
     ]
   },
   "scripts": {
-    "test": "tsx --test test/*.test.ts",
+    "test": "node scripts/test-isolated.mjs",
     "typecheck": "tsc --noEmit",
     "build": "tsc -p tsconfig.build.json",
     "audit:runtime": "npm audit --omit=dev --audit-level=high",
